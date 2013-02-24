@@ -1,7 +1,7 @@
 {
-  'version': 'v0.8.18',
-  'npm': false,
-  'main': 'app.js',
-  'args': [],
-  'envs': {}
+  "version": "v0.8.18",
+  "npm": false,
+  "main": "app.js",
+  "args": [],
+  "envs": {}
 }
