@@ -28,7 +28,8 @@ app.configure('development', function(){
 });
 
 app.get('/', routes.index);
-app.get('/game', routes.game);
+//app.get('/game', routes.game);
+app.post('/game', routes.game);
 app.get('/gameover', routes.gameover);
 
 var server = http.createServer(app);
@@ -50,22 +51,22 @@ io.sockets.on('connection', function(socket){
 	
 	// プレイヤーの座標アップデートイベント監視
 	socket.on('player-update', function(data) {
-		socket.broadcast.json.emit('player-update',{userId:socket.handshake.userId, data:data});
+		socket.broadcast.json.emit('player-update', {userId:socket.handshake.userId, data:data});
 	});
 
 	// 弾丸の生成イベント監視
 	socket.on('bullet-create', function(data) {
-		socket.broadcast.json.emit('bullet-create',{userId:socket.handshake.userId, data:data});
+		socket.broadcast.json.emit('bullet-create', {userId:socket.handshake.userId, data:data});
 	});
 
 	// 切断イベント(既存の切断イベント)監視
 	socket.on('disconnect', function() {
-		socket.broadcast.json.emit('disconnect-user',{userId:socket.handshake.userId});
+		socket.broadcast.json.emit('disconnect-user', {userId:socket.handshake.userId});
 	});
 
 	// プレーヤーが撃墜されたお知らせイベント監視 yamauchi
 	socket.on('inform-otherUnitBroken', function(data) {
-		socket.broadcast.json.emit('inform-otherUnitBroken', {userId:socket.handshake.userId});
+		socket.broadcast.json.emit('inform-otherUnitBroken', {userId: socket.handshake.userId, data: data});
 	});
 
 });

@@ -16,9 +16,10 @@ jQuery(function($) {
 	var _bulletMap = {};
 	
 	// サーバーの、プレイヤーの座標アップデート「socket.broadcast.json.emit()」を監視
-	_socket.on('player-update',function(data) {
+	_socket.on('player-update', function(data) {
 		var user;
 		if(_userMap[data.userId] === undefined) {
+			
 			console.log('create user ' + data.userId , data);
 
 			user = {
@@ -29,7 +30,7 @@ jQuery(function($) {
 				userId: data.userId
 			};
 
-			user.element = $('<span class="player"><img src="/images/unit.png" />' + data.userId + '</span>')
+			user.element = $('<span class="player"><img src="/images/unit.png" />' + data.data.username + '</span>')
 				.attr('data-user-id', user.userId);
 			$('body').append(user.element);
 			_userMap[data.userId] = user;
@@ -86,7 +87,7 @@ jQuery(function($) {
 	_socket.on('inform-otherUnitBroken', function(data) {
 
 		console.log(data);
-		$('body').prepend('<div id="message">ID：' + data.userId + ' が撃墜されたよ</div>');
+		$('body').prepend('<div id="message">' + data.data.username + ' が撃墜されたよ</div>');
 		$('#message').animate({'top': '0'}).delay(2000).animate({'top': '-50px'}, function(){
 			$(this).remove();
 		});
@@ -99,13 +100,14 @@ jQuery(function($) {
 	/***********************************************/
 	var _keyMap = [];
 	
-	// プレーヤーの座標位置
+	// 自プレーヤーの座標位置
 	var _player = {
 		x:       Math.random() * 1000 | 0,
 		y:       Math.random() * 500 | 0,
 		v:       0,
 		rotate:  0,
-		element: $('#my-player')
+		element: $('#my-player'),
+		myname: $('#myname').html()
 	};
 	
 	// 弾丸の座標位置
@@ -199,7 +201,7 @@ jQuery(function($) {
 			   bullet.y <_player.y + 50) {
 				
 				// 【イベント発生】プレーヤーが撃墜されたお知らせイベントを発生させる yamauchi
-				_socket.emit('inform-otherUnitBroken', {});
+				_socket.emit('inform-otherUnitBroken', {username: _player.myname});
 				location.href = '/gameover';
 			}
 		}
@@ -208,12 +210,13 @@ jQuery(function($) {
 		updateCss(_bullet);
 		updateCss(_player);
 		
-		// 【イベント発生】プレイヤーの座標アップデートイベントを発生させ、サーバーに弾丸の位置情報を渡す
+		// 【イベント発生】プレイヤーの座標アップデートイベントを発生させ、サーバーにプレイヤーの位置情報を渡す
 		_socket.emit('player-update', {
 			x:      _player.x | 0,
 			y:      _player.y | 0,
 			rotate: _player.rotate | 0,
-			v:      _player.v
+			v:      _player.v,
+			username: _player.myname
 		});
 		
 		// mainfunc()を再帰的に呼び出す
