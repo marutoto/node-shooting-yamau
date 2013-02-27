@@ -3,7 +3,7 @@
  * Module dependencies.
  */
  
- // branch check
+ // [hp] branch check
  
 "use strict";
 var express = require('express')
@@ -51,20 +51,30 @@ io.sockets.on('connection', function(socket){
 	console.log('game start! - userID : ' + _userId);
 	socket.handshake.userId = _userId;
 	_userId ++;
-	
-	// プレイヤーの座標アップデートイベント監視
+
+	// プレイヤー情報の座標アップデートイベント監視
 	socket.on('player-update', function(data) {
-		socket.broadcast.json.emit('player-update', {userId:socket.handshake.userId, data:data});
+		socket.broadcast.json.emit('player-update', {userId: socket.handshake.userId, data: data});
 	});
 
 	// 弾丸の生成イベント監視
 	socket.on('bullet-create', function(data) {
-		socket.broadcast.json.emit('bullet-create', {userId:socket.handshake.userId, data:data});
+		socket.broadcast.json.emit('bullet-create', {userId: socket.handshake.userId, data: data});
+	});
+
+	// 弾丸の消滅イベント監視
+	socket.on('bullet-delete', function(data) {
+		socket.broadcast.json.emit('bullet-delete', {userId: data});
+	});
+
+	// HP表示減算イベント監視
+	socket.on('disp-damage', function(data) {
+		socket.broadcast.json.emit('disp-damage', {userId: socket.handshake.userId, power: data});
 	});
 
 	// 切断イベント(既存の切断イベント)監視
 	socket.on('disconnect', function() {
-		socket.broadcast.json.emit('disconnect-user', {userId:socket.handshake.userId});
+		socket.broadcast.json.emit('disconnect-user', {userId: socket.handshake.userId});
 	});
 
 	// プレーヤーが撃墜されたお知らせイベント監視 yamauchi
