@@ -40,10 +40,24 @@ a {
 	background: -moz-linear-gradient(top, rgba(254,255,232,1) 0%, rgba(214,219,191,1) 100%);
 }
 
+.user-info {
+	color: #FFFFFF;
+	font-size: 11px;
+	width: 65px;
+	height: 30px;
+	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */  
+	-moz-border-radius: 10px; /* FireFox用 */
+	
+	opacity: 0.75;
+	background-color: #000000;
+	
+	padding: 2px 5px;
+}
+
 .hp-area {
 	width: 60px;
 	height: 5px;
-	border: solid 2px #C0C0C0;
+	border: solid 2px #778899;
 	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */  
 	-moz-border-radius: 10px; /* FireFox用 */
 	

@@ -38,8 +38,15 @@ jQuery(function($) {
 			};
 
 			// 機体をブラウザに描写
-			user.element = $('<span class="player"><img src="/images/unit.png" />' + data.data.username + '<br /><div class="hp-area"><div class="hp"></div></div></span>')
-				.attr('data-user-id', user.userId);
+			var elem_html;
+			elem_html  = '<span class="player">';
+			elem_html += '<img src="/images/unit.png" />';
+			elem_html += '<div class="user-info">';
+			elem_html += '<div>'+data.data.username+'</div>';
+			elem_html += '<div class="hp-area"><div class="hp"></div></div>';
+			elem_html += '</div>';
+			elem_html += '</span>';
+			user.element = $(elem_html).attr('data-user-id', user.userId);
 			$('body').append(user.element);
 			
 			// 機体をマップに登録
@@ -122,7 +129,7 @@ jQuery(function($) {
 				player.hp     -= data.power;
 				player.damage += data.power;
 				var width = player.damage+'px';
-				$(this).children('.hp-area').children('.hp').animate({
+				$(this).children('.user-info').children('.hp-area').children('.hp').animate({
 					'width': width
 				});
 			}
@@ -285,7 +292,7 @@ jQuery(function($) {
 				_player.hp     -= bullet.power;
 				_player.damage += bullet.power;
 				var width = _player.damage+'px';
-				_player.element.children('.hp-area').children('.hp').animate({
+				_player.element.children('.user-info').children('.hp-area').children('.hp').animate({
 					'width': width
 				});
 
