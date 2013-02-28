@@ -62,9 +62,14 @@ io.sockets.on('connection', function(socket){
 		socket.broadcast.json.emit('bullet-create', {userId: socket.handshake.userId, data: data});
 	});
 
-	// 弾丸の消滅イベント監視
+	// 着弾した弾丸の消滅イベント監視
 	socket.on('bullet-delete', function(data) {
-		socket.broadcast.json.emit('bullet-delete', {userId: data});
+		socket.broadcast.json.emit('bullet-delete', {userId: data.userId});
+	});
+
+	// 許容数より溢れた弾丸の消滅イベント監視
+	socket.on('overflow-bullet-delete', function(data) {
+		socket.broadcast.json.emit('bullet-delete', {userId: socket.handshake.userId});
 	});
 
 	// HP表示減算イベント監視
