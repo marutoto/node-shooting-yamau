@@ -9,16 +9,18 @@
 	<script src="/javascripts/client.js"></script>
 </head>
 
-<body>
+<body tabindex="0">
 
-	<span class="player" id="my-player">
-		<img src="/images/unit.png" />
-		<div class="user-info">
-			<div id="myname"><%- myname %></div>
-			<div class="hp-area"><div class="hp"></div></div>
-		</div>
-	</span>
-	<span class="bullets" id="my-bullets"></span>
+	<div id="playing-area">
+		<span class="player" id="my-player">
+			<img src="/images/unit.png" />
+			<div class="user-info">
+				<div id="myname"><%- myname %></div>
+				<div class="hp-area"><div class="hp"></div></div>
+			</div>
+		</span>
+		<span class="bullets" id="my-bullets"></span>
+	</div>
 
 </body>
 

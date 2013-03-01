@@ -84,7 +84,12 @@ io.sockets.on('connection', function(socket){
 
 	// プレーヤーが撃墜されたお知らせイベント監視 yamauchi
 	socket.on('inform-otherUnitBroken', function(data) {
-		socket.broadcast.json.emit('inform-otherUnitBroken', {userId: socket.handshake.userId, data: data});
+		socket.broadcast.json.emit('inform-otherUnitBroken', {data: data});
+	});
+
+	// 
+	socket.on('unit-escape', function(data) {
+		socket.broadcast.json.emit('unit-escape', {userId: socket.handshake.userId});
 	});
 
 });

@@ -2,6 +2,49 @@
 
 jQuery(function($) {
 
+	var dev_flg = true;
+	if(!dev_flg) {
+		// ゲームウィンドウにフォーカスさせる
+		$('body').focus(function() {
+			//$('#my-player').css({'display': 'block'});
+			//$('#my-player').animate({'opacity': '1'}, 'fast');
+		});
+	
+		$('body').focus();
+	
+		// ウィンドウから離れるとゲームオーバー
+		$('body').blur(function() {
+			
+			_socket.emit('unit-escape');
+			
+			$('#my-player').animate({'opacity': '0'}, 'slow', function() {
+			
+				// 【イベント発生】プレーヤーが撃墜されたお知らせイベントを発生させる
+				var message = my_player.myname + 'がゲームを終了したよ';
+				_socket.emit('inform-otherUnitBroken', {message: message});
+				location.href = '/gameover';
+			
+			});
+		});
+	}
+	
+	// ゲーム説明文表示
+	var game_explain;
+	game_explain  = '<p><b>操作説明</b><br />';
+	game_explain += '『↑』『↓』 ： 前後移動<br />';
+	game_explain += '『←』『→』 ： 左右回転<br />';
+	game_explain += '『space』 ： 発射！！</p><br />';
+	game_explain += '<p class="msg-caution">!!! COUTION !!!<br />';
+	game_explain += '一度画面から離れるとゲームオーバーとなります</p>';
+	$('body').prepend('<div id="msg-explain">' + game_explain + '</div>');
+		$('#msg-explain').animate({'top': '0'}).delay(6000).animate({'top': '-140px'}, function(){
+			$(this).remove();
+		});
+	
+	
+	/************/
+	/* 初期設定 */
+	/************/
 	"use strict";
 	
 	// socket.ioにアクセスしてオブジェクトを取得
@@ -16,10 +59,18 @@ jQuery(function($) {
 	// キーボードマップ
 	var _keyMap = [];
 
+	// 枠の位置設定
+	//var w_width  = $(window).width();
+	//var w_height = $(window).height();
+	var w_width  = $('#playing-area').width();
+	var w_height = $('#playing-area').height();
+	var area_from_left = $('#playing-area').offset().top;
+	var area_from_top  = $('#playing-area').offset().left;
+	
 	// 自プレーヤー初期値
 	var my_player = {
-		x       : Math.random() * 1000 | 0,
-		y       : Math.random() * 500 | 0,
+		x       : (Math.random() * 1000) + area_from_left | 0,
+		y       : (Math.random() * 500) + area_from_top | 0,
 		v       : 0,
 		rotate  : 0,
 		element : $('#my-player'),
@@ -34,6 +85,9 @@ jQuery(function($) {
 	// 自弾発射数
 	var bullet_num = 0;
 
+	console.log(area_from_left);
+	console.log(area_from_top);
+	
 
 	/**************************/
 	/*   各ハンドラを設定   */
@@ -69,7 +123,8 @@ jQuery(function($) {
 			elem_html += '</div>';
 			elem_html += '</span>';
 			user.element = $(elem_html).attr('data-user-id', user.userId);
-			$('body').append(user.element);
+			//$('body').append(user.element);
+			$('#playing-area').append(user.element);
 			
 			// マップに登録
 			_userMap[data.userId] = user;
@@ -187,13 +242,21 @@ jQuery(function($) {
 		
 	});
 
-	/*** サーバーの、プレーヤーが撃墜されたお知らせイベント「socket.broadcast.json.emit()」を監視 ***/
+	/*** サーバーの、プレーヤーの接続が切れたお知らせイベント「socket.broadcast.json.emit()」を監視 ***/
 	_socket.on('inform-otherUnitBroken', function(data) {
 
-		$('body').prepend('<div id="message">' + data.data.username + ' が撃墜されたよ</div>');
-		$('#message').animate({'top': '0'}).delay(2000).animate({'top': '-50px'}, function(){
+		//$('body').prepend('<div id="msg-info">' + data.data.message + '</div>');
+		$('#playing-area').prepend('<div id="msg-info">' + data.data.message + '</div>');
+		$('#msg-info').animate({'top': '0'}).delay(2000).animate({'top': '-50px'}, function(){
 			$(this).remove();
 		});
+
+	});
+
+
+	_socket.on('unit-escape', function(data) {
+
+		$('span.player[data-user-id="' + data.userId + '"]').animate({'opacity': '0'}, 'slow');
 
 	});
 
@@ -202,13 +265,13 @@ jQuery(function($) {
 	/*   メインプログラム (ページロード時に走査)   */
 	/***********************************************/
 
-	// 座標を更新する関数
+	/*** 座標を更新する関数 ***/
 	var updatePosition = function(unit) {
 		unit.x += unit.v * Math.cos(unit.rotate * Math.PI / 180);
 		unit.y += unit.v * Math.sin(unit.rotate * Math.PI / 180);
 	};
 	
-	// CSSを操作し、ブラウザ上の表示を更新する関数
+	/*** CSSを操作し、ブラウザ上の表示を更新する関数 ***/
 	var updateCss = function(unit) {
 		
 		unit.element.css({
@@ -227,7 +290,7 @@ jQuery(function($) {
 		}
 	};
 	
-	// メインループ (ひたすら呼び出されて回り続ける)
+	/*** メインループ (ひたすら呼び出されて回り続ける) ***/
 	var mainfunc = function() {
 
 		// プレイヤーor弾丸の位置情報を修正
@@ -296,14 +359,21 @@ jQuery(function($) {
 		// ○自プレーヤーの座標データを更新する
 		updatePosition(my_player);
 		
-		// ウィンドウのサイズを取得
-		var w_width  = $(window).width();
-		var w_height = $(window).height();
 		
+		// 画面外に出た時のプレイヤー位置を調整する
+		/*
 		if(my_player.x < -50)      my_player.x = w_width;
 		if(my_player.y < -50)      my_player.y = w_height;
 		if(my_player.x > w_width)  my_player.x = -50;
 		if(my_player.y > w_height) my_player.y = -50;
+		*/
+		area_from_left = $('#playing-area').offset().top;
+		area_from_top  = $('#playing-area').offset().left;
+		
+		if(my_player.x < area_from_left - 50)      my_player.x = area_from_left + w_width;
+		if(my_player.y < area_from_top - 50)       my_player.y = area_from_top + w_height;
+		if(my_player.x > area_from_left + w_width) my_player.x = area_from_left - 50;
+		if(my_player.y > area_from_top + w_height) my_player.y = area_from_top - 50;
 		
 		// ○自弾の座標データを更新する
 		for(var i in my_bullets) {
@@ -353,7 +423,8 @@ jQuery(function($) {
 
 					if(my_player.hp <= 0) {
 						// 【イベント発生】プレーヤーが撃墜されたお知らせイベントを発生させる
-						_socket.emit('inform-otherUnitBroken', {username: my_player.myname});
+						var message = my_player.myname + 'が撃墜されたよ'
+						_socket.emit('inform-otherUnitBroken', {message: message});
 						location.href = '/gameover';
 					}
 					_bulletMap[userId].splice(i, 1);
@@ -382,14 +453,16 @@ jQuery(function($) {
 		
 		// mainfunc()を再帰的に呼び出す
 		setTimeout(mainfunc, 30);
+		
 	};
+
 
 	var _isSpaceKeyUp = true;
 
-	// mainfunc()の初回起動
+	/*** mainfunc()の初回起動 ***/
 	setTimeout(mainfunc, 30);
 	
-	// キーボードのイベントハンドラを設定
+	/*** キーボードのイベントハンドラを設定 ***/
 	$(window).keydown(function(e) {
 		_keyMap[e.keyCode] = true;
 	});
