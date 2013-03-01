@@ -30,19 +30,9 @@ jQuery(function($) {
 	
 	// 自弾初期値
 	var my_bullets = [];
-	/*
-	var _bullets = 
-		x       : -100,
-		y       : -100,
-		v       : 0,
-		rotate  : 0,
-		element : $('#my-bullets'),
-		power   : 20
-	};
-	*/
-	
-	var bullet_num = 0;
 
+	// 自弾発射数
+	var bullet_num = 0;
 
 
 	/**************************/
