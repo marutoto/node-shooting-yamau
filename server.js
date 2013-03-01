@@ -64,7 +64,7 @@ io.sockets.on('connection', function(socket){
 
 	// 着弾した弾丸の消滅イベント監視
 	socket.on('bullet-delete', function(data) {
-		socket.broadcast.json.emit('bullet-delete', {userId: data.userId});
+		socket.broadcast.json.emit('bullet-delete', {data: data});
 	});
 
 	// 許容数より溢れた弾丸の消滅イベント監視

@@ -52,12 +52,12 @@ jQuery(function($) {
 	/*** サーバーの、プレイヤー情報の座標アップデート「socket.broadcast.json.emit()」を監視 ***/
 	_socket.on('player-update', function(data) {
 
-		// userMapに機体(他機)が登録されていない場合（ページロード時）
+		// userMapに機体(他機)が登録されていない場合
 		if(_userMap[data.userId] === undefined) {
 			
 			console.log('自分以外の機体 : userId ' + data.userId + ' - ' + data.data.username , data);
 			
-			/* 機体情報 */
+			/* 他プレイヤー情報 */
 			// 初期化
 			var user = {
 				x      : 0,
@@ -69,7 +69,7 @@ jQuery(function($) {
 				damage : 0
 			};
 
-			// 機体をブラウザに描写
+			// ブラウザに描写
 			var elem_html;
 			elem_html  = '<span class="player">';
 			elem_html += '<img src="/images/unit.png" />';
@@ -81,31 +81,15 @@ jQuery(function($) {
 			user.element = $(elem_html).attr('data-user-id', user.userId);
 			$('body').append(user.element);
 			
-			// 機体をマップに登録
+			// マップに登録
 			_userMap[data.userId] = user;
 
-			/* 弾丸情報 */
-			// 初期化
-			/*var bullet = {
-				x      : -100,
-				y      : -100,
-				v      : 0,
-				rotate : 0,
-				power  : 20,
-				userId : data.userId
-			};*/
 
-			// 弾丸をブラウザに描写 （枠外に隠している）
-			
-			/*
-			bullet.element = $('<img src="/images/bullet.png" class="bullet" />')
-				.attr('data-user-id', user.userId);
-			$('body').append(bullet.element);
-			*/
+			/* 他プレイヤー弾丸格納エリア情報 */
+			// ブラウザに描写
 			user.element.after('<span class="bullets" data-user-id="' + user.userId + '"></span>');
 			
-			// 枠外にある弾丸をマップに登録
-			//////////_bulletMap[data.userId] = bullets;
+			// マップに登録
 			_bulletMap[data.userId] = [];
 
 			// ページロード時点でのHPを設定
@@ -130,59 +114,61 @@ jQuery(function($) {
 	});
 
 	/*** サーバーの、弾丸生成イベント「socket.broadcast.json.emit()」を監視 ***/
-	_socket.on('bullet-create',function(data) {
+	_socket.on('bullet-create', function(data) {
 
 		var bullets = _bulletMap[data.userId];
 		if(bullets !== undefined){
 			
 			var elem_html = '<img src="/images/bullet.png" class="bullet ' + data.data.number + '" />';
+			$('span.bullets[data-user-id="'+data.userId+'"]').append(elem_html);
+			
+			var bullet_cnt = $('span.bullets[data-user-id="'+data.userId+'"] .bullet').length;
+			
+			// 5発を超えたら若い弾丸を消す
+			if(bullet_cnt > 5) {
+				
+				_bulletMap[data.userId].splice(0, 1);
+				$('span.bullets[data-user-id="'+data.userId+'"] .bullet').first().remove();
+				
+			}
 			
 			var bullet = {
 				x       : data.data.x,
 				y       : data.data.y,
-				rotate  : data.data.rotate,
 				v       : data.data.v,
+				rotate  : data.data.rotate,
+				element : $('span.bullets[data-user-id="' + data.userId + '"] .bullet.' + data.data.number),
 				power   : 20,
-				element : $(elem_html),
 				number  : data.data.number,
 				userId  : data.userId
-			}	
-			_bulletMap[data.userId].push(bullet);
-
-			$('span.bullets[data-user-id="'+data.userId+'"]').append(elem_html);
+			};
+			
+			_bulletMap[data.userId][data.data.number] = bullet;
 		}
 	});
 
 	/*** サーバーの、着弾した弾丸の消滅イベント「socket.broadcast.json.emit()」を監視 ***/
-	// TODO:data.data.numberが要る
 	_socket.on('bullet-delete', function(data) {
-		var bullet = _bulletMap[data.userId];
-		// 他弾
-		if(bullet != undefined) {
-			bullet.x = -100;
-			bullet.y = -100;
-			bullet.v = 0;
-			updateCss(bullet);
-		// 自弾
-		} else {
-			my_bullet.x = -100;
-			my_bullet.y = -100;
-			my_bullet.v = 0;
-			updateCss(my_bullet);
-		}
-	});
 
-	/*** サーバーの、許容数より溢れた弾丸の消滅イベント「socket.broadcast.json.emit()」を監視 ***/
-	_socket.on('overflow-bullet-delete', function(data) {
-		var bullet = _bulletMap[data.userId];
-		if(bullet != undefined) {
-			_bulletMap[data.userId].splice(0,1);
-			bullet.first().remove();
+		var bullets = _bulletMap[data.data.userId];
+		
+		// 他プレイヤーの弾丸表示
+		if(bullets != undefined) {
+			
+			$('span.bullets[data-user-id="' + data.data.userId + '"] .bullet.' + data.data.number).remove();
+			
+			_bulletMap[data.data.userId].splice(data.data.number, 1);
+			
+		// 撃って当てたプレイヤーの弾丸表示
+		} else {
+			
+			$('#my-bullets .bullet.' + data.data.number).remove();
+			my_bullets.splice(data.data.number, 1);
 		}
 	});
 
 	/*** サーバーの、HP表示減算イベントを監視 ***/
-	_socket.on('disp-damage',function(data) {
+	_socket.on('disp-damage', function(data) {
 		$('.player').each(function() {
 			if($(this).data('userId') == data.userId) {
 				var player = _userMap[data.userId];
@@ -197,14 +183,16 @@ jQuery(function($) {
 	});
 		
 	/*** サーバーの、切断イベント「socket.broadcast.json.emit()」を監視 ***/
-	_socket.on('disconnect-user',function(data) {
+	_socket.on('disconnect-user', function(data) {
 		var user = _userMap[data.userId];
 		if(user !== undefined){
-			user.element.remove();
+			
+			$('span.bullets[data-user-id="' + data.userId + '"]').remove();
 			delete _userMap[data.userId];
-			var bullet = _bulletMap[data.userId];
-			//bullet.element.remove();
+			
+			$('span.player[data-user-id="' + data.userId + '"]').remove();
 			delete _bulletMap[data.userId];
+			
 		}
 		
 	});
@@ -232,7 +220,7 @@ jQuery(function($) {
 	
 	// CSSを操作し、ブラウザ上の表示を更新する関数
 	var updateCss = function(unit) {
-		//console.log(unit);
+		
 		unit.element.css({
 			left      : unit.x | 0 + 'px',
 			top       : unit.y | 0 + 'px',
@@ -241,8 +229,8 @@ jQuery(function($) {
 		
 		// 初回表示時のHPゲージを調整
 		if(unit.firstflg) {
-			var width = unit.damage+'px';
-			unit.element.children('.hp-area').children('.hp').css({
+			var width = unit.damage + 'px';
+			unit.element.children('.user-info').children('.hp-area').children('.hp').css({
 				width: width
 			});
 			unit.firstflg = false;
@@ -278,12 +266,10 @@ jQuery(function($) {
 			
 			// 5発を超えたら若い弾丸を消す
 			if(bullet_num > 5) {
-				var delete_bullet = my_bullets[0];
-				my_bullets.splice(0,1);
+				
+				my_bullets.splice(0, 1);
 				$('#my-bullets .bullet').first().remove();
 				
-				// 【イベント発生】弾丸消滅イベントを発生させる
-				_socket.emit('overflow-bullet-delete');
 			}
 		
 			var create_bullet = {
@@ -291,10 +277,11 @@ jQuery(function($) {
 				y       : -100,
 				v       : 0,
 				rotate  : 0,
-				element : $('#my-bullets .bullet.'+bullet_num),
+				element : $('#my-bullets .bullet.' + bullet_num),
 				power   : 20,
 				number  : bullet_num
 			};
+			
 			create_bullet.x      = my_player.x + 20;
 			create_bullet.y      = my_player.y + 20;
 			create_bullet.rotate = my_player.rotate;
@@ -310,7 +297,7 @@ jQuery(function($) {
 				number : bullet_num
 			});
 		
-			my_bullets.push(create_bullet);
+			my_bullets[bullet_num] = create_bullet;
 		}
 		
 		// スピード調整のようなもの（ブレーキ？）
@@ -329,7 +316,7 @@ jQuery(function($) {
 		if(my_player.y > w_height) my_player.y = -50;
 		
 		// ○自弾の座標データを更新する
-		for(var i=0 ; i<my_bullets.length ; i++) {
+		for(var i in my_bullets) {
 			updatePosition(my_bullets[i]);
 		}
 		
@@ -339,62 +326,55 @@ jQuery(function($) {
 			
 			var bullets = _bulletMap[userId];
 			
-			
-			//////////////ここ！CSSあたってない、classがおかしい？
-			console.log(bullets);
 			// 他弾ループ
-			/*
-			for(var number in bullets) {
-				
-				console.log(bullets[number]);
+			for(var i in bullets) {
 				
 				// □他弾の座標データを更新する
-				updatePosition(bullets[number]);
+				updatePosition(bullets[i]);
 				
 				// □他弾のブラウザ表示を更新する
-				updateCss(bullets[number]);exit;
+				updateCss(bullets[i]);
 				
-				// 飛んでいる弾丸の座標がプレイヤーと被ったら、被弾判定
-				if(my_player.x < bullets[number].x         &&
-				   bullets[number].x    < my_player.x + 50 &&
-				   my_player.y < bullets[number].y         &&
-				   bullets[number].y    < my_player.y + 50   ) {
+				// 飛んでいる弾丸の座標が自プレイヤーと被ったら、被弾判定
+				if(my_player.x  < bullets[i].x     &&
+				   bullets[i].x < my_player.x + 50 &&
+				   my_player.y  < bullets[i].y     &&
+				   bullets[i].y < my_player.y + 50) {
 					
-					// 被弾したプレイヤーの弾丸表示を消す
-					//bullets[number].x = -100;
-					//bullets[number].y = -100;
-					//bullets[number].v = 0;
-					//updateCss(bullets[number]);
+					// 被弾した弾丸の表示を消す
+					bullets[i].element.remove();
 					
 					// 【イベント発生】弾丸消滅イベントを発生させる
-					_socket.emit('bullet-delete', bullets[number].userId);
-					
-					// 被弾したプレイヤーのHPを減算し、HP表示を減算する
-					my_player.hp     -= bullets[number].power;
-					my_player.damage += bullets[number].power;
-					var width = my_player.damage + 'px';
-					my_player.element.children('.user-info').children('.hp-area').children('.hp').animate({
-						'width': width
+					_socket.emit('bullet-delete', {
+						number  : bullets[i].number,
+						userId  : bullets[i].userId
 					});
-	
-					// 【イベント発生】HP表示減算イベントを発生させる
-					_socket.emit('disp-damage', bullets[number].power);
 					
-					if(_player.hp <= 0) {
-						// 【イベント発生】プレーヤーが撃墜されたお知らせイベントを発生させる yamauchi
+					// 自プレイヤーのHPを減算し、HP表示を減算する
+					my_player.hp     -= bullets[i].power;
+					my_player.damage += bullets[i].power;
+					
+					my_player.element.children('.user-info').children('.hp-area').children('.hp').animate({
+						'width': my_player.damage + 'px'
+					});
+
+					// 【イベント発生】HP表示減算イベントを発生させる
+					_socket.emit('disp-damage', bullets[i].power);
+
+					if(my_player.hp <= 0) {
+						// 【イベント発生】プレーヤーが撃墜されたお知らせイベントを発生させる
 						_socket.emit('inform-otherUnitBroken', {username: my_player.myname});
 						location.href = '/gameover';
 					}
+					_bulletMap[userId].splice(i, 1);
 				}
 			}
-			*/
-		}
-		
-		// ○自弾のブラウザ表示を更新する
-		for(var i=0 ; i<my_bullets.length ; i++) {
-			updateCss(my_bullets[i]);
 		}
 
+		// ○自弾のブラウザ表示を更新する
+		for(var i in my_bullets) {
+			updateCss(my_bullets[i]);
+		}
 
 		// 【イベント発生】プレイヤーの座標アップデートイベントを発生させ、サーバーにプレイヤーの位置情報を渡す
 		_socket.emit('player-update', {
@@ -409,8 +389,6 @@ jQuery(function($) {
 	
 		// ○自プレーヤーのブラウザ表示を更新する
 		updateCss(my_player);
-		
-		
 		
 		// mainfunc()を再帰的に呼び出す
 		setTimeout(mainfunc, 30);
