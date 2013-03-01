@@ -64,8 +64,8 @@ jQuery(function($) {
 	//var w_height = $(window).height();
 	var w_width  = $('#playing-area').width();
 	var w_height = $('#playing-area').height();
-	var area_from_left = $('#playing-area').offset().top;
-	var area_from_top  = $('#playing-area').offset().left;
+	var area_from_left = $('#playing-area').position().top;
+	var area_from_top  = $('#playing-area').position().left;
 	
 	// 自プレーヤー初期値
 	var my_player = {
@@ -169,8 +169,8 @@ jQuery(function($) {
 			
 			var bullet_cnt = $('span.bullets[data-user-id="'+data.userId+'"] .bullet').length;
 			
-			// 5発を超えたら若い弾丸を消す
-			if(bullet_cnt > 5) {
+			// 10発を超えたら若い弾丸を消す
+			if(bullet_cnt > 10) {
 				
 				_bulletMap[data.userId].splice(0, 1);
 				$('span.bullets[data-user-id="'+data.userId+'"] .bullet').first().remove();
@@ -317,8 +317,8 @@ jQuery(function($) {
 			// 自弾を生成
 			$('#my-bullets').append('<img src="/images/bullet.png" class="bullet ' + bullet_num + '" />');
 			
-			// 5発を超えたら若い弾丸を消す
-			if(bullet_num > 5) {
+			// 10発を超えたら若い弾丸を消す
+			if(bullet_num > 10) {
 				
 				my_bullets.splice(0, 1);
 				$('#my-bullets .bullet').first().remove();
@@ -359,22 +359,12 @@ jQuery(function($) {
 		// ○自プレーヤーの座標データを更新する
 		updatePosition(my_player);
 		
-		
 		// 画面外に出た時のプレイヤー位置を調整する
-		/*
-		if(my_player.x < -50)      my_player.x = w_width;
-		if(my_player.y < -50)      my_player.y = w_height;
-		if(my_player.x > w_width)  my_player.x = -50;
-		if(my_player.y > w_height) my_player.y = -50;
-		*/
-		area_from_left = $('#playing-area').offset().top;
-		area_from_top  = $('#playing-area').offset().left;
-		
-		if(my_player.x < area_from_left - 50)      my_player.x = area_from_left + w_width;
-		if(my_player.y < area_from_top - 50)       my_player.y = area_from_top + w_height;
-		if(my_player.x > area_from_left + w_width) my_player.x = area_from_left - 50;
-		if(my_player.y > area_from_top + w_height) my_player.y = area_from_top - 50;
-		
+		if(my_player.x < -60)           my_player.x = w_width + 10;
+		if(my_player.y < -60)           my_player.y = w_height + 10;
+		if(my_player.x > w_width + 10)  my_player.x = -60;
+		if(my_player.y > w_height + 10) my_player.y = -60;
+
 		// ○自弾の座標データを更新する
 		for(var i in my_bullets) {
 			updatePosition(my_bullets[i]);

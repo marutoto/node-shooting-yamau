@@ -6,8 +6,8 @@ body {
 	/*width: 100%;*/
 	/*padding: 0;*/
 	margin: 0;
-	padding-top: 50px;
-	padding-left: 50px;
+	padding-top: 150px;
+	padding-left: 100px;
 	font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 	overflow:hidden;
 }
@@ -20,6 +20,17 @@ p {
 	margin: 0;
 	padding: 0;
 }
+
+#playing-area {
+	/*margin: 0 auto;*/
+	height: 700px;
+	width: 1000px;
+	background-color: #ccff99;
+	position: relative;
+	overflow:hidden;
+	border: solid 1px #99cc99;
+}
+
 
 .player{
 	width: 50px;
@@ -34,14 +45,6 @@ p {
 	position: absolute;
 	top: -100px;
 	left: -100px;
-}
-
-#playing-area {
-	/*margin: 0 auto;*/
-	height: 400px;
-	width: 300px;
-	background-color: red;
-	overflow:hidden;
 }
 
 #msg-explain {
