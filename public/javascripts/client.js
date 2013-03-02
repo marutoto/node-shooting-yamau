@@ -34,10 +34,10 @@ jQuery(function($) {
 	game_explain += '『↑』『↓』 ： 前後移動<br />';
 	game_explain += '『←』『→』 ： 左右回転<br />';
 	game_explain += '『space』 ： 発射！！</p><br />';
-	game_explain += '<p class="msg-caution">!!! COUTION !!!<br />';
-	game_explain += '一度画面から離れるとゲームオーバーとなります</p>';
-	$('body').prepend('<div id="msg-explain">' + game_explain + '</div>');
-		$('#msg-explain').animate({'top': '0'}).delay(6000).animate({'top': '-140px'}, function(){
+	game_explain += '<p class="caution">!!! COUTION !!!<br />';
+	game_explain += '一度画面から離れるとゲームオーバーです</p>';
+	$('#playing-area').prepend('<div class="message explain">' + game_explain + '</div>');
+		$('.message.explain').animate({'top': '0'}).delay(6000).animate({'top': '-140px'}, function(){
 			$(this).remove();
 		});
 	
@@ -46,6 +46,14 @@ jQuery(function($) {
 	/* 初期設定 */
 	/************/
 	"use strict";
+	
+	// 定数宣言
+	const PLAYER_HP           = 100;
+	const PLAYER_HP_LENGTH    = $('#my-player .hp-area').width();
+	const BULLET_LIMIT        = 10;
+	const BULLET_POWER        = 10;
+	const PLAYING_AREA_WIDTH  = $('#playing-area').width();
+	const PLAYING_AREA_HEIGHT = $('#playing-area').height();
 	
 	// socket.ioにアクセスしてオブジェクトを取得
 	var _socket = io.connect('http://'+location.host+'/');
@@ -58,36 +66,26 @@ jQuery(function($) {
 	
 	// キーボードマップ
 	var _keyMap = [];
-
-	// 枠の位置設定
-	//var w_width  = $(window).width();
-	//var w_height = $(window).height();
-	var w_width  = $('#playing-area').width();
-	var w_height = $('#playing-area').height();
-	var area_from_left = $('#playing-area').position().top;
-	var area_from_top  = $('#playing-area').position().left;
 	
 	// 自プレーヤー初期値
 	var my_player = {
-		x       : (Math.random() * 1000) + area_from_left | 0,
-		y       : (Math.random() * 500) + area_from_top | 0,
+		x       : Math.random() * (PLAYING_AREA_WIDTH - 50),
+		y       : Math.random() * (PLAYING_AREA_HEIGHT - 50),
 		v       : 0,
 		rotate  : 0,
 		element : $('#my-player'),
 		myname  : $('#myname').html(),
-		hp      : 60,
+		hp      : PLAYER_HP,
 		damage  : 0
 	};
-	
+console.log(my_player.x);
+console.log(my_player.y);
 	// 自弾初期値
 	var my_bullets = [];
 
 	// 自弾発射数
 	var bullet_num = 0;
 
-	console.log(area_from_left);
-	console.log(area_from_top);
-	
 
 	/**************************/
 	/*   各ハンドラを設定   */
@@ -109,7 +107,7 @@ jQuery(function($) {
 				v      : 0,
 				rotate : 0,
 				userId : data.userId,
-				hp     : 60,
+				hp     : PLAYER_HP,
 				damage : 0
 			};
 
@@ -123,7 +121,6 @@ jQuery(function($) {
 			elem_html += '</div>';
 			elem_html += '</span>';
 			user.element = $(elem_html).attr('data-user-id', user.userId);
-			//$('body').append(user.element);
 			$('#playing-area').append(user.element);
 			
 			// マップに登録
@@ -169,8 +166,8 @@ jQuery(function($) {
 			
 			var bullet_cnt = $('span.bullets[data-user-id="'+data.userId+'"] .bullet').length;
 			
-			// 10発を超えたら若い弾丸を消す
-			if(bullet_cnt > 10) {
+			// 弾丸制限数を超えたら若い弾丸を消す
+			if(bullet_cnt > BULLET_LIMIT) {
 				
 				_bulletMap[data.userId].splice(0, 1);
 				$('span.bullets[data-user-id="'+data.userId+'"] .bullet').first().remove();
@@ -183,7 +180,7 @@ jQuery(function($) {
 				v       : data.data.v,
 				rotate  : data.data.rotate,
 				element : $('span.bullets[data-user-id="' + data.userId + '"] .bullet.' + data.data.number),
-				power   : 20,
+				power   : BULLET_POWER,
 				number  : data.data.number,
 				userId  : data.userId
 			};
@@ -219,9 +216,12 @@ jQuery(function($) {
 				var player = _userMap[data.userId];
 				player.hp     -= data.power;
 				player.damage += data.power;
-				var width = player.damage+'px';
+				
+				// 減少表示量を計算する
+				var decrement = calcHpLengthDecrement(player.damage);
+				
 				$(this).children('.user-info').children('.hp-area').children('.hp').animate({
-					'width': width
+					'width': decrement + 'px'
 				});
 			}
 		});
@@ -245,9 +245,8 @@ jQuery(function($) {
 	/*** サーバーの、プレーヤーの接続が切れたお知らせイベント「socket.broadcast.json.emit()」を監視 ***/
 	_socket.on('inform-otherUnitBroken', function(data) {
 
-		//$('body').prepend('<div id="msg-info">' + data.data.message + '</div>');
-		$('#playing-area').prepend('<div id="msg-info">' + data.data.message + '</div>');
-		$('#msg-info').animate({'top': '0'}).delay(2000).animate({'top': '-50px'}, function(){
+		$('#playing-area').prepend('<div class="message info">' + data.data.message + '</div>');
+		$('.message.info').animate({'top': '0'}).delay(2000).animate({'top': '-50px'}, function(){
 			$(this).remove();
 		});
 
@@ -282,13 +281,18 @@ jQuery(function($) {
 		
 		// 初回表示時のHPゲージを調整
 		if(unit.firstflg) {
-			var width = unit.damage + 'px';
+			var decrement = calcHpLengthDecrement(unit.damage);
 			unit.element.children('.user-info').children('.hp-area').children('.hp').css({
-				width: width
+				width: decrement + 'px'
 			});
 			unit.firstflg = false;
 		}
 	};
+	
+	/*** HPゲージの減少量を計算する ***/
+	var calcHpLengthDecrement = function(player_damage) {
+		return (PLAYER_HP_LENGTH * player_damage) / PLAYER_HP;
+	}
 	
 	/*** メインループ (ひたすら呼び出されて回り続ける) ***/
 	var mainfunc = function() {
@@ -317,8 +321,8 @@ jQuery(function($) {
 			// 自弾を生成
 			$('#my-bullets').append('<img src="/images/bullet.png" class="bullet ' + bullet_num + '" />');
 			
-			// 10発を超えたら若い弾丸を消す
-			if(bullet_num > 10) {
+			// 弾丸制限を超えたら若い弾丸を消す
+			if(bullet_num > BULLET_LIMIT) {
 				
 				my_bullets.splice(0, 1);
 				$('#my-bullets .bullet').first().remove();
@@ -331,7 +335,7 @@ jQuery(function($) {
 				v       : 0,
 				rotate  : 0,
 				element : $('#my-bullets .bullet.' + bullet_num),
-				power   : 20,
+				power   : BULLET_POWER,
 				number  : bullet_num
 			};
 			
@@ -346,7 +350,7 @@ jQuery(function($) {
 				y      : create_bullet.y | 0,
 				rotate : create_bullet.rotate | 0,
 				v      : create_bullet.v,
-				power  : 20,
+				power  : BULLET_POWER,
 				number : bullet_num
 			});
 		
@@ -360,10 +364,10 @@ jQuery(function($) {
 		updatePosition(my_player);
 		
 		// 画面外に出た時のプレイヤー位置を調整する
-		if(my_player.x < -60)           my_player.x = w_width + 10;
-		if(my_player.y < -60)           my_player.y = w_height + 10;
-		if(my_player.x > w_width + 10)  my_player.x = -60;
-		if(my_player.y > w_height + 10) my_player.y = -60;
+		if(my_player.x < -60)                      my_player.x = PLAYING_AREA_WIDTH + 10;
+		if(my_player.y < -60)                      my_player.y = PLAYING_AREA_HEIGHT + 10;
+		if(my_player.x > PLAYING_AREA_WIDTH + 10)  my_player.x = -60;
+		if(my_player.y > PLAYING_AREA_HEIGHT + 10) my_player.y = -60;
 
 		// ○自弾の座標データを更新する
 		for(var i in my_bullets) {
@@ -404,8 +408,11 @@ jQuery(function($) {
 					my_player.hp     -= bullets[i].power;
 					my_player.damage += bullets[i].power;
 					
+					// 減少表示量を計算する
+					var decrement = calcHpLengthDecrement(my_player.damage);
+					
 					my_player.element.children('.user-info').children('.hp-area').children('.hp').animate({
-						'width': my_player.damage + 'px'
+						'width': decrement + 'px'
 					});
 
 					// 【イベント発生】HP表示減算イベントを発生させる
