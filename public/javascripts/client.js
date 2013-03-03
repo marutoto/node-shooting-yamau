@@ -1,8 +1,7 @@
-// TODO: 「var a = b | c」表記は、左側がfalseだったら右側を代入するの略記か調べる
 
 jQuery(function($) {
 
-	var dev_flg = true;
+	var dev_flg = false;
 	if(!dev_flg) {
 		// ゲームウィンドウにフォーカスさせる
 		$('body').focus(function() {
@@ -78,8 +77,7 @@ jQuery(function($) {
 		hp      : PLAYER_HP,
 		damage  : 0
 	};
-console.log(my_player.x);
-console.log(my_player.y);
+
 	// 自弾初期値
 	var my_bullets = [];
 
@@ -219,7 +217,6 @@ console.log(my_player.y);
 				
 				// 減少表示量を計算する
 				var decrement = calcHpLengthDecrement(player.damage);
-				
 				$(this).children('.user-info').children('.hp-area').children('.hp').animate({
 					'width': decrement + 'px'
 				});
@@ -321,14 +318,16 @@ console.log(my_player.y);
 			// 自弾を生成
 			$('#my-bullets').append('<img src="/images/bullet.png" class="bullet ' + bullet_num + '" />');
 			
+			var bullet_cnt = $('#my-bullets .bullet').length;
+			
 			// 弾丸制限を超えたら若い弾丸を消す
-			if(bullet_num > BULLET_LIMIT) {
+			if(bullet_cnt > BULLET_LIMIT) {
 				
 				my_bullets.splice(0, 1);
 				$('#my-bullets .bullet').first().remove();
 				
 			}
-		
+			
 			var create_bullet = {
 				x       : -100,
 				y       : -100,
@@ -355,6 +354,7 @@ console.log(my_player.y);
 			});
 		
 			my_bullets[bullet_num] = create_bullet;
+			console.log(my_bullets);
 		}
 		
 		// スピード調整のようなもの（ブレーキ？）
@@ -390,10 +390,8 @@ console.log(my_player.y);
 				updateCss(bullets[i]);
 				
 				// 飛んでいる弾丸の座標が自プレイヤーと被ったら、被弾判定
-				if(my_player.x  < bullets[i].x     &&
-				   bullets[i].x < my_player.x + 50 &&
-				   my_player.y  < bullets[i].y     &&
-				   bullets[i].y < my_player.y + 50) {
+				if(my_player.x  < bullets[i].x && bullets[i].x < my_player.x + 50 &&
+				   my_player.y  < bullets[i].y && bullets[i].y < my_player.y + 50) {
 					
 					// 被弾した弾丸の表示を消す
 					bullets[i].element.remove();
@@ -408,9 +406,7 @@ console.log(my_player.y);
 					my_player.hp     -= bullets[i].power;
 					my_player.damage += bullets[i].power;
 					
-					// 減少表示量を計算する
 					var decrement = calcHpLengthDecrement(my_player.damage);
-					
 					my_player.element.children('.user-info').children('.hp-area').children('.hp').animate({
 						'width': decrement + 'px'
 					});
@@ -418,12 +414,25 @@ console.log(my_player.y);
 					// 【イベント発生】HP表示減算イベントを発生させる
 					_socket.emit('disp-damage', bullets[i].power);
 
+					// HPが0以下になった場合
 					if(my_player.hp <= 0) {
 						// 【イベント発生】プレーヤーが撃墜されたお知らせイベントを発生させる
 						var message = my_player.myname + 'が撃墜されたよ'
 						_socket.emit('inform-otherUnitBroken', {message: message});
 						location.href = '/gameover';
 					}
+					
+					// 弾丸マップ更新
+					_bulletMap[userId].splice(i, 1);
+					
+					continue;
+				}
+				
+				// 飛んでいる弾丸がプレイングエリアから出れば、弾丸を消す
+				if(bullets[i].x < 0 || PLAYING_AREA_WIDTH  < bullets[i].x ||
+				   bullets[i].y < 0 || PLAYING_AREA_HEIGHT < bullets[i].y) {
+
+					bullets[i].element.remove();
 					_bulletMap[userId].splice(i, 1);
 				}
 			}
@@ -431,7 +440,18 @@ console.log(my_player.y);
 
 		// ○自弾のブラウザ表示を更新する
 		for(var i in my_bullets) {
+			
 			updateCss(my_bullets[i]);
+			
+			// 飛んでいる弾丸がプレイングエリアから出れば、弾丸を消す
+			if(my_bullets[i].x < 0 || PLAYING_AREA_WIDTH  < my_bullets[i].x ||
+			   my_bullets[i].y < 0 || PLAYING_AREA_HEIGHT < my_bullets[i].y) {
+				
+				// 弾丸マップ更新
+				my_bullets[i].element.remove();
+				my_bullets.splice(i, 1);
+				
+			}
 		}
 
 		// 【イベント発生】プレイヤーの座標アップデートイベントを発生させ、サーバーにプレイヤーの位置情報を渡す

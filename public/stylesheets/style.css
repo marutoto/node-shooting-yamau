@@ -25,7 +25,7 @@ p {
 	/*margin: 0 auto;*/
 	height: 700px;
 	/*width: 1000px;*/
-	width: 500px;
+	width: 1000px;
 	background-color: #ccff99;
 	position: relative;
 	overflow: hidden;
@@ -97,30 +97,27 @@ p {
 .user-info {
 	color: #FFFFFF;
 	font-size: 11px;
-	/*width: 65px;*/
 	width: 40px;
 	height: 30px;
-	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */  
-	-moz-border-radius: 10px; /* FireFox用 */
-	
 	opacity: 0.75;
 	background-color: #000000;
-	
 	padding: 2px 5px;
 	overflow: hidden;
+	
+	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */  
+	-moz-border-radius: 10px; /* FireFox用 */
 }
 
 .hp-area {
-	/*width: 60px;*/
 	width: 35px;
 	height: 5px;
 	border: solid 2px #778899;
+	
 	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */  
 	-moz-border-radius: 10px; /* FireFox用 */
 	
 	background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(255,48,25,1)), color-stop(22%,rgba(242,174,4,1)), color-stop(34%,rgba(243,247,4,1)), color-stop(100%,rgba(115,249,4,1)));
 	background: -moz-linear-gradient(left, rgba(255,48,25,1) 0%, rgba(242,174,4,1) 22%, rgba(243,247,4,1) 34%, rgba(115,249,4,1) 100%);
-
 }
 
 .hp {
@@ -130,7 +127,6 @@ p {
 	
 	-webkit-border-radius: 0 10px 10px 0; /* Safari,Google Chrome用 */
 	-moz-border-radius: 0 10px 10px 0; /* FireFox用 */
-
 }
 
 
