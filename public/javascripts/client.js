@@ -1,7 +1,7 @@
 
 jQuery(function($) {
 
-	var dev_flg = true;
+	var dev_flg = false;
 	if(!dev_flg) {
 		// ゲームウィンドウにフォーカスさせる
 		$('body').focus(function() {
