@@ -52,8 +52,6 @@ p {
 	left: 50%;
 	margin-left: -200px;
 	
-	/*opacity: 0.9;*/
-	
 	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */  
 	-moz-border-radius: 10px; /* FireFox用 */
 	

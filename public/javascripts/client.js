@@ -162,16 +162,6 @@ jQuery(function($) {
 			var elem_html = '<img src="/images/bullet.png" class="bullet ' + data.data.number + '" />';
 			$('span.bullets[data-user-id="'+data.userId+'"]').append(elem_html);
 			
-			var bullet_cnt = $('span.bullets[data-user-id="'+data.userId+'"] .bullet').length;
-			
-			// 弾丸制限数を超えたら若い弾丸を消す
-			if(bullet_cnt > BULLET_LIMIT) {
-				
-				_bulletMap[data.userId].splice(0, 1);
-				$('span.bullets[data-user-id="'+data.userId+'"] .bullet').first().remove();
-				
-			}
-			
 			var bullet = {
 				x       : data.data.x,
 				y       : data.data.y,
@@ -184,6 +174,16 @@ jQuery(function($) {
 			};
 			
 			_bulletMap[data.userId][data.data.number] = bullet;
+			
+			var bullet_cnt = Object.keys(_bulletMap[data.userId]).length;
+
+			// 弾丸制限数を超えたら若い弾丸を消す
+			if(bullet_cnt > BULLET_LIMIT) {
+				
+				_bulletMap[data.userId].splice(0, 1);
+				$('span.bullets[data-user-id="'+data.userId+'"] .bullet').first().remove();
+				
+			}
 		}
 	});
 
@@ -318,16 +318,6 @@ jQuery(function($) {
 			// 自弾を生成
 			$('#my-bullets').append('<img src="/images/bullet.png" class="bullet ' + bullet_num + '" />');
 			
-			var bullet_cnt = $('#my-bullets .bullet').length;
-			
-			// 弾丸制限を超えたら若い弾丸を消す
-			if(bullet_cnt > BULLET_LIMIT) {
-				
-				my_bullets.splice(0, 1);
-				$('#my-bullets .bullet').first().remove();
-				
-			}
-			
 			var create_bullet = {
 				x       : -100,
 				y       : -100,
@@ -352,8 +342,18 @@ jQuery(function($) {
 				power  : BULLET_POWER,
 				number : bullet_num
 			});
-		
+
 			my_bullets[bullet_num] = create_bullet;
+			
+			var bullet_cnt = Object.keys(my_bullets).length;
+			
+			// 弾丸制限を超えたら若い弾丸を消す
+			if(bullet_cnt > BULLET_LIMIT) {
+				
+				my_bullets.splice(0, 1);
+				$('#my-bullets .bullet').first().remove();
+				
+			}
 		}
 		
 		// スピード調整のようなもの（ブレーキ？）
