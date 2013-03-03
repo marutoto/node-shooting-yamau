@@ -12,7 +12,11 @@ body {
 }
 
 a {
-	color: #00B7FF;
+	color: #99ffcc;
+	text-decoration: none;
+}
+a:hover {
+	color: #ff3366;
 }
 
 p {
