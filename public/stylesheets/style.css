@@ -3,13 +3,12 @@ html, body {
 }
 
 body {
-	/*width: 100%;*/
-	/*padding: 0;*/
 	margin: 0;
 	padding-top: 100px;
 	padding-left: 100px;
 	font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 	overflow:hidden;
+	background: #f7f7f7 url(img/bg.jpg) repeat;
 }
 
 a {
@@ -22,14 +21,21 @@ p {
 }
 
 #playing-area {
-	/*margin: 0 auto;*/
 	height: 700px;
-	/*width: 1000px;*/
 	width: 1000px;
-	background-color: #ccff99;
 	position: relative;
 	overflow: hidden;
-	border: solid 1px #99cc99;
+
+	border: 1px solid #D3D3D3;
+	background: -moz-linear-gradient(top, rgba(240,249,255,1) 0%, rgba(204,204,204,1) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(240,249,255,1)), color-stop(100%,rgba(204,204,204,1))); /* Chrome,Safari4+ */
+	-moz-box-shadow: 10px 15px 7px rgba(0, 0, 0, 0.3);
+	-webkit-box-shadow: 10px 15px 7px rgba(0, 0, 0, 0.3);
+	box-shadow:10px 15px 7px rgba(0, 0, 0, 0.3);
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#777777, direction=0, strength=3, enabled=true);
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 }
 
 .message {

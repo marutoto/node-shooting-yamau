@@ -354,7 +354,6 @@ jQuery(function($) {
 			});
 		
 			my_bullets[bullet_num] = create_bullet;
-			console.log(my_bullets);
 		}
 		
 		// スピード調整のようなもの（ブレーキ？）
