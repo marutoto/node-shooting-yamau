@@ -11,20 +11,21 @@ jQuery(function($) {
 	
 		$('body').focus();
 	
+    // ↓ なんでこれ必要やったんやろ？(202311)
 		// ウィンドウから離れるとゲームオーバー
-		$('body').blur(function() {
-			
-			_socket.emit('unit-escape');
-			
-			$('#my-player').animate({'opacity': '0'}, 'slow', function() {
-			
-				// 【イベント発生】プレーヤーが撃墜されたお知らせイベントを発生させる
-				var message = my_player.myname + 'がゲームを終了したよ';
-				_socket.emit('inform-otherUnitBroken', {message: message});
-				location.href = '/gameover';
-			
-			});
-		});
+		// $('body').blur(function() {
+    //
+		// 	_socket.emit('unit-escape');
+    //
+		// 	$('#my-player').animate({'opacity': '0'}, 'slow', function() {
+    //
+		// 		// 【イベント発生】プレーヤーが撃墜されたお知らせイベントを発生させる
+		// 		var message = my_player.myname + 'がゲームを終了したよ';
+		// 		_socket.emit('inform-otherUnitBroken', {message: message});
+		// 		location.href = '/gameover';
+    //
+		// 	});
+		// });
 	}
 	
 	// ゲーム説明文表示
